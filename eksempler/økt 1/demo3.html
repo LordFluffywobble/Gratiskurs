@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        canvas {
+            background-color: lightgray;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="game" width="800" height="730"></canvas>
+    <script>
+        const c = document.getElementById("game");
+        const ctx = c.getContext("2d");
+
+        drawFace(0, 0 );
+        drawFace(300, 300);
+        // ctx.beginPath();
+        // ctx.fillStyle = 'blue';
+        // ctx.arc(200, 150, 80, 0, Math.PI * 2);
+        // ctx.fill();
+
+        function fillSmallGreenRect() {
+            ctx.fillStyle = 'rgba(0, 150, 0, 0.5)';
+            ctx.fillRect(100, 100, 50, 50);
+        }
+
+        function drawFace(x, y) {
+            ctx.beginPath();
+            ctx.fillStyle = 'pink';
+            ctx.arc(x + 200, y + 200, 200, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.fillStyle = 'green';
+            ctx.arc(x + 200, y + 230, 20, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.fillStyle = 'blue';
+            ctx.arc(x + 270, y + 130, 30, 0, Math.PI * 2);
+            ctx.arc(x + 130, y + 130, 30, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 10;
+            ctx.arc(x + 200, y + 200, 150, 0.5, Math.PI - 0.5);
+            ctx.stroke();
+        }
+
+
+    </script>
+</body>
+
+</html>

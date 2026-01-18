@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        canvas {
+            background-color: antiquewhite;
+        }
+    </style>
+</head>
+
+<body onload="drawRectangles()">
+    <img id="martin" src="../../img/martin4.png" style="display: none;" />
+    <img id="beach" src="../../img/big-beach.jpg" style="display: none;" />
+    <canvas id="game" width="800" height="600"></canvas>
+    <script>
+        const c = document.getElementById("game");
+        const ctx = c.getContext("2d");
+
+        const imgMartin = document.querySelector("#martin");
+        const imgBeach = document.querySelector("#beach");
+
+        let canvasWidth = c.width;
+        let canvasHeight = c.height;
+
+        let isGameOver = false;
+        let score = 0;
+
+        let pipeWidth = 80;
+        let pipeHeight = 100;
+        let pipe1x = canvasWidth;
+        let pipe1y = 0;
+        let pipe2x = canvasWidth;
+        let pipe2y = canvasHeight - pipeHeight;
+
+        let playerWidth = 92;
+        let playerHeight = 119;
+
+        let backgroundX = 0;
+        let backgroundWidth = 1000;
+        let backgroundHeight = 600;
+        let backgroundSpeed = 1;
+
+        let pipeSpeed;
+        let playerX;
+        let playerY;
+        let speedY;
+        let margin = 50;
+        let gravity = 0.7;
+        let friction = 1;
+        let spacePressed;
+
+        restartGame();
+
+        function drawRectangles() {
+            drawGame();
+            if (!isGameOver) {
+                move();
+                updateScore();
+            } else {
+                if (spacePressed) {
+                    restartGame();
+                }
+            }
+
+            if (isOnGround()
+                || isCollision(pipe1x, pipe1y)
+                || isCollision(pipe2x, pipe2y)) {
+                isGameOver = true;
+                if (isOnGround()) playerY = canvasHeight - playerHeight;
+                drawGame();
+            } else {
+                addGravity();
+            }
+            requestAnimationFrame(drawRectangles);
+        }
+
+        function updateScore() {
+            let pipeRightX = pipe1x + pipeWidth;
+            if (playerX >= pipeRightX && playerX < pipeRightX + pipeSpeed) {
+                score++;
+            }
+        }
+
+        function restartGame() {
+            pipeSpeed = 3;
+            isGameOver = false;
+            score = 0;
+            pipe1x = canvasWidth;
+            pipe2x = canvasWidth;
+            playerX = 100;
+            playerY = 150;
+            speedY = -1;
+            spacePressed = false;
+        }
+
+        function drawGame() {
+            clearCanvas();
+            drawPipes();
+            drawMartin();
+            drawScore();
+            if (isGameOver) drawGameOver();
+        }
+
+        function drawScore() {
+            const scoreText = Math.floor(score);
+            drawText(30, `Score: ${scoreText}`, 20, 40, 'yellow', '#ff6600');
+        }
+
+        function drawGameOver() {
+            const x = (canvasWidth / 2) - 150;
+            const y = canvasHeight / 2;
+            drawText(60, 'GAME OVER', x, y, 'red', 'darkred');
+            drawText(30, 'Trykk <space> for å starte på nytt', x - 40, y + 40, 'yellow', 'orange');
+        }
+
+        function drawText(fontSize, text, x, y, color1, color2) {
+            ctx.font = `${fontSize}px Arial`;
+            ctx.fillStyle = color1;
+            ctx.fillText(text, x, y);
+            ctx.strokeStyle = color2;
+            ctx.lineWidth = 1;
+            ctx.strokeText(text, x, y);
+        }
+
+        function move() {
+            pipe1x -= pipeSpeed;
+            pipe2x -= pipeSpeed;
+            const pipeRightX = pipe1x + pipeWidth;
+            if (pipeRightX < 0) {
+                pipe1x = canvasWidth;
+                pipe2x = canvasWidth;
+                pipeSpeed += 0.2;
+            }
+            playerY += speedY;
+            backgroundX -= backgroundSpeed;
+            if (spacePressed) {
+                bounce();
+                spacePressed = false;
+            }
+        }
+
+        function bounce() {
+            speedY = -12;
+        }
+
+        function addGravity() {
+            speedY += gravity;
+        }
+
+        function isOnGround() {
+            return playerY + playerHeight >= canvasHeight;
+        }
+
+        function drawPipes() {
+            ctx.fillStyle = '#FDD9A1';
+            ctx.strokeStyle = '#735d38';
+            ctx.lineWidth = 2;
+            ctx.fillRect(pipe1x, pipe1y, pipeWidth, pipeHeight);
+            ctx.fillRect(pipe2x, pipe2y, pipeWidth, pipeHeight);
+            ctx.strokeRect(pipe1x, pipe1y, pipeWidth, pipeHeight);
+            ctx.strokeRect(pipe2x, pipe2y, pipeWidth, pipeHeight);
+        }
+
+        function drawMartin() {
+            ctx.strokeStyle = '#735d38';
+            ctx.lineWidth = 2;
+            ctx.drawImage(imgMartin, playerX, playerY, playerWidth, playerHeight);
+            ctx.strokeRect(playerX, playerY, playerWidth, playerHeight);
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+            ctx.drawImage(imgBeach, backgroundX, 0, backgroundWidth, backgroundHeight);
+            ctx.drawImage(imgBeach, backgroundX + backgroundWidth, 0, backgroundWidth, backgroundHeight);
+            if (backgroundX <= -canvasWidth) {
+                backgroundX = 0;
+            }
+        }
+
+        function handleKeyDown(event) {
+            if (event.code === 'Space') spacePressed = true;
+        }
+
+        document.addEventListener('keydown', handleKeyDown);
+
+        function isCollision(pipeX, pipeY) {
+            /*
+                To firkanter kolliderer ikke hvis:
+
+                den ene ... for den andre
+                1. er helt til venstre 
+                2. er helt til høyre
+                3. er helt over
+                4. er helt under
+                Hvis ingen av disse stemmer, har vi kollisjon.
+            */
+            let left1 = playerX;
+            let left2 = pipeX;
+            let right1 = playerX + playerWidth;
+            let right2 = pipeX + pipeWidth;
+            let top1 = playerY;
+            let top2 = pipeY;
+            let bottom1 = playerY + playerHeight;
+            let bottom2 = pipeY + pipeHeight;
+
+            if (right1 < left2) return false; // 1
+            if (left1 > right2) return false; // 2
+            if (bottom1 < top2) return false; // 3
+            if (top1 > bottom2) return false; // 4
+
+            return true;
+        }
+    </script>
+</body>
+
+</html>
